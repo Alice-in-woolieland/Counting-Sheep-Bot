@@ -14,9 +14,6 @@ intents = discord.Intents.all()
 
 bot = commands.Bot(command_prefix='w!', intents=intents)
 
-pingRole = "React to this message with 💜 to be notified when Alice streams. React to this message with 💗 if you follow Alice on twitch!"
-TWITCHROLE = "TWITCH NOTIFICATION"
-FOLLOWROLE = "Follower"
 moderatorRole = "@everyone"
 reactionRole = {}
 
