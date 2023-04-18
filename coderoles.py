@@ -3,8 +3,8 @@ import os
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
-from emoji import is_emoji
 from plugins import *
+from guildinfo import guildInfo
 
 load_dotenv()
 
@@ -13,13 +13,15 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 intents = discord.Intents.all()
 
 bot = commands.Bot(command_prefix='w!', intents=intents)
-
-moderatorRole = "@everyone"
-roleList = []
+guildDict = {}
 
 @bot.event
 async def on_ready():
     print("Logged in as a bot {0.user}".format(bot))
+    async for i in bot.fetch_guilds():
+        info = guildInfo()
+        info.setGuild(i)
+        guildDict[i.id] = info
 
 @bot.command()
 async def repeat(ctx, *args):
@@ -29,25 +31,28 @@ async def repeat(ctx, *args):
     await ctx.send(arguments)
 
 @bot.command()
-async def setMod(ctx, role, add=True):
-    global moderatorRole
-    if add==True and role != None:
-        moderatorRole = discord.utils.get(ctx.guild.roles, name=role)
-        await ctx.send(f'Moderator Role Changed: {moderatorRole}')
-    elif add==False and role != None:
-        moderatorRole = "@everyone"
+async def setMod(ctx, role):
+    moderatorRole = discord.utils.get(ctx.guild.roles, name=role)
+    if moderatorRole != None:
+        guildDict[ctx.guild.id].setModRole(moderatorRole)
         await ctx.send(f'Moderator Role Changed: {moderatorRole}')
     else:
-        await ctx.send(f'Critical Error (Tag Alice)')
+        await ctx.send(f'No role under that name.')
+
+@bot.command()
+async def getMod(ctx):
+    moderatorRole = guildDict[ctx.guild.id].modRole()
+    await ctx.send(f'Moderator Role: {moderatorRole}')
 
 @bot.command()
 async def roleAdd(ctx, role):
-    if moderatorRole in ctx.author.roles:
-        global roleList
+    guild = guildDict[ctx.guild.id]
+    if guild.modRole() in ctx.author.roles:
+        roleList = guild.roleList()
         if role in roleList:
             await ctx.send('Role already in list. Check roles by typing `w!roles')
         if discord.utils.get(ctx.guild.roles, name=role) != None:
-                roleList.append(str(role))
+                guild.addRoleList(str(role))
                 await ctx.send(f'Role Added/Changed: {role}')
         elif discord.utils.get(ctx.guild.roles, name=role) == None:
                 await ctx.send(f'No role under that name. Discord is case sensitive, so check for that or any misspellings.')
@@ -56,10 +61,11 @@ async def roleAdd(ctx, role):
 
 @bot.command()
 async def roleRemove(ctx, role):
-    if moderatorRole in ctx.author.roles:
+    guild = guildDict[ctx.guild.id]
+    if guild.modRole() in ctx.author.roles:
         global roleList
         if str(role) in roleList:
-            roleList.remove(str(role))
+            guild.removeRoleList(str(role))
             await ctx.send(f'Role Removed: {role}')
         else:
             await ctx.send(f'Role not in list. Discord is case sensitive, so check for that or any misspellings.')
@@ -69,7 +75,8 @@ async def roleRemove(ctx, role):
 
 @bot.command()
 async def roles(ctx):
-    global roleList
+    guild = guildDict[ctx.guild.id]
+    roleList = guild.roleList()
     if roleList == []:
         await ctx.send("No roles added ;-;")
         await ctx.send("add roles by typing `w!roleAdd <role>`")
@@ -82,7 +89,8 @@ async def roles(ctx):
 
 @bot.command()
 async def roleGive(ctx, *args):
-    global roleList
+    guild = guildDict[ctx.guild.id]
+    roleList = guild.roleList()
     inputRoles = args
     discUser = ctx.author
     if inputRoles == []:
@@ -95,7 +103,6 @@ async def roleGive(ctx, *args):
             await ctx.send(f"{inputRoles[i]} has been added to {discUser.name}")
         else:
             await ctx.send(f"{inputRoles[i]} is not on the role list.")
-            await ctx.send('Please check the role list by doing `w!roles`')
 
 @bot.command()
 async def explode(ctx):
