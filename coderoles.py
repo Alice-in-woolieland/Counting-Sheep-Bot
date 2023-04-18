@@ -24,13 +24,6 @@ async def on_ready():
         guildDict[i.id] = info
 
 @bot.command()
-async def repeat(ctx, *args):
-    await ctx.message.delete()
-    arguments = ' '.join(args)
-    arguments += f" - {ctx.message.author.display_name}"
-    await ctx.send(arguments)
-
-@bot.command()
 async def setMod(ctx, role):
     moderatorRole = discord.utils.get(ctx.guild.roles, name=role)
     if moderatorRole != None:
@@ -106,6 +99,7 @@ async def roleGive(ctx, *args):
 
 @bot.command()
 async def explode(ctx):
+    await ctx.message.delete()
     gif = generateExplosion()
     emb = discord.Embed()
     emb.set_image(url = str(gif))
@@ -119,6 +113,7 @@ async def explode(ctx):
 
 @bot.command()
 async def flip(ctx):
+    await ctx.message.delete()
     gif = generateFlip()
     emb = discord.Embed()
     emb.set_image(url = str(gif))
@@ -129,5 +124,12 @@ async def flip(ctx):
         explodee = ctx.message.mentions[0].mention
         title = f"{explodee} get flipped bitch"
     await ctx.send(title, embed=emb)
+
+@bot.command()
+async def repeat(ctx, *args):
+    await ctx.message.delete()
+    arguments = ' '.join(args)
+    arguments += f" - {ctx.message.author.display_name}"
+    await ctx.send(arguments)
 
 bot.run(TOKEN)
