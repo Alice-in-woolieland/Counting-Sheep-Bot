@@ -21,6 +21,7 @@ reactionRole = {}
 async def on_ready():
     print("Logged in as a bot {0.user}".format(bot))
 
+
 @bot.command()
 async def repeat(ctx, *args):
     await ctx.message.delete()
