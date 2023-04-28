@@ -38,6 +38,24 @@ async def getMod(ctx):
     await ctx.send(f'Moderator Role: {moderatorRole}')
 
 @bot.command()
+async def setFlip(ctx, role):
+    guild = guildDict[ctx.guild.id]
+    flipRole = discord.utils.get(ctx.guild.roles, name=role)
+    if guild.modRole() in ctx.author.roles:
+        if flipRole != None:
+            guildDict[ctx.guild.id].setFlipRole(flipRole)
+            await ctx.send(f'Flip Role Changed: {flipRole}')
+        else:
+            await ctx.send(f'No role under that name.')
+    else:
+        await ctx.send(f'You must be a moderator in order to run this command')
+
+@bot.command()
+async def getFlip(ctx):
+    flipRole = guildDict[ctx.guild.id].flip()
+    await ctx.send(f'Flip Role: {flipRole}')
+
+@bot.command()
 async def roleAdd(ctx, role):
     guild = guildDict[ctx.guild.id]
     if guild.modRole() in ctx.author.roles:
@@ -97,6 +115,7 @@ async def roleGive(ctx, *args):
         else:
             await ctx.send(f"{inputRoles[i]} is not on the role list.")
 
+
 @bot.command()
 async def explode(ctx):
     await ctx.message.delete()
@@ -113,16 +132,40 @@ async def explode(ctx):
 
 @bot.command()
 async def flip(ctx):
+    guild = guildDict[ctx.guild.id]
     await ctx.message.delete()
     gif = generateFlip()
     emb = discord.Embed()
     emb.set_image(url = str(gif))
     detonate = ctx.author.name
+    flippedRole = guild.flip()
     if ctx.message.mentions == []:
         title = str(f"{detonate} get flipped bitch")
     else:
         explodee = ctx.message.mentions[0].mention
         title = f"{explodee} get flipped bitch"
+        discUser = discord.utils.get(ctx.guild.members, mention=explodee)
+        role = discord.utils.get(ctx.guild.roles, name=str(flippedRole))
+        await discUser.add_roles(role)
+    await ctx.send(title, embed=emb)
+
+@bot.command()
+async def unflip(ctx):
+    guild = guildDict[ctx.guild.id]
+    await ctx.message.delete()
+    gif = generateUnflip()
+    emb = discord.Embed()
+    emb.set_image(url = str(gif))
+    detonate = ctx.author.name
+    flippedRole = guild.flip()
+    if ctx.message.mentions == []:
+        title = str(f"{detonate} tried to unflip themself")
+    else:
+        explodee = ctx.message.mentions[0].mention
+        title = f"{detonate} has unflipped {explodee}"
+        discUser = discord.utils.get(ctx.guild.members, mention=explodee)
+        role = discord.utils.get(ctx.guild.roles, name=str(flippedRole))
+        await discUser.remove_roles(role)
     await ctx.send(title, embed=emb)
 
 @bot.command()
